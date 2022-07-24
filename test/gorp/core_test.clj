@@ -1,0 +1,1 @@
+(ns gorp.core-test)

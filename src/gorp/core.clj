@@ -1,0 +1,2 @@
+(ns gorp.core
+  (:require []))
