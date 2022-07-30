@@ -1,5 +1,5 @@
 (ns gorp.core
-  (:require [rebel-readline.clojure.main :as rebel]))
+  (:require [reply.main :as reply]))
 
 (defn -main [& args]
-  (apply rebel/-main args))
+  (apply reply/-main args))
