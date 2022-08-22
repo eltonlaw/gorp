@@ -67,7 +67,6 @@
   (write-txt-file (ch/generate-string x {:pretty true})))
 
 (defn init-fn []
-  (require '[gorp.core])
   (in-ns 'gorp.core))
 
 (defn -main
@@ -81,8 +80,8 @@
             (println (.getMessage e))
             (reply.main/parse-args ["--help"])))
         options (assoc options
-                       :custom-init (->> (io/resource "gorp_init.clj")
-                                         (reply.init/formify-file)))]
+                       :custom-eval '(do (require '[gorp.core])
+                                         (gorp.core/init-fn)))]
     (if (:help options)
       (println banner)
       (reply.main/launch options))
