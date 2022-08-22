@@ -7,9 +7,10 @@
     [clojure.pprint :as pprint]
     [clojure.repl :as repl]
     [clojure.string :as string]
+    [clj-uuid :as uuid]
     [clojure.walk :as walk]
     [cognitect.aws.client.api :as aws]
-    [reply.initialization :as reply.init]
+    [criterium.core :as criterium]
     [reply.main :as reply.main])
   (:import
     [java.io LineNumberReader InputStreamReader PushbackReader]
