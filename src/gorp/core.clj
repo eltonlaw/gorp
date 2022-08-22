@@ -70,7 +70,11 @@
   (require '[gorp.core])
   (in-ns 'gorp.core))
 
-(defn -main [& args]
+(defn -main
+  "Mostly a copy of reply.main/-main except with a hardcoded
+  :custom-init in resources/gorp_init.clj which just calls the
+  `init-fn` defined above"
+  [& args]
   (let [[options args banner]
         (try (reply.main/parse-args args)
           (catch Exception e
