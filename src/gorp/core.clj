@@ -1,13 +1,19 @@
 (ns gorp.core
-  (:require [clojure.edn :as edn]
-            [clojure.string :as string]
-            [clojure.java.io :as io]
-            [clojure.walk :as walk]
-            [clojure.pprint :as pprint]
-            [clojure.data.xml :as xml]
-            [cheshire.core :as ch]
-            [cognitect.aws.client.api :as aws]
-            [reply.main :as reply]))
+  (:require
+    [cheshire.core :as ch]
+    [clojure.data.xml :as xml]
+    [clojure.edn :as edn]
+    [clojure.java.io :as io]
+    [clojure.pprint :as pprint]
+    [clojure.repl :as repl]
+    [clojure.string :as string]
+    [clojure.walk :as walk]
+    [cognitect.aws.client.api :as aws]
+    [reply.initialization :as reply.init]
+    [reply.main :as reply.main])
+  (:import
+    [java.io LineNumberReader InputStreamReader PushbackReader]
+    [clojure.lang RT]))
 
 (defn parse-json [s]
   (ch/parse-string s true))
@@ -67,5 +73,20 @@
   (println "..... Writing new: " fp)
   (spit fp (ch/generate-string x {:pretty true})))
 
+(defn init-fn []
+  (require '[gorp.core])
+  (in-ns 'gorp.core))
+
 (defn -main [& args]
-  (apply reply/-main args))
+  (let [[options args banner]
+        (try (reply.main/parse-args args)
+          (catch Exception e
+            (println (.getMessage e))
+            (reply.main/parse-args ["--help"])))
+        options (assoc options
+                       :custom-init (->> (io/resource "gorp_init.clj")
+                                         (reply.init/formify-file)))]
+    (if (:help options)
+      (println banner)
+      (reply.main/launch options))
+    (shutdown-agents)))
