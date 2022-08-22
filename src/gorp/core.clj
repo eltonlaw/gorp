@@ -9,11 +9,9 @@
     [clojure.string :as string]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [cognitect.aws.client.api :as aws]
     [criterium.core :as criterium]
     [reply.main :as reply.main])
   (:import
-    [java.io LineNumberReader InputStreamReader PushbackReader]
     [clojure.lang RT]))
 
 (defn parse-json [s] (ch/parse-string s true))
