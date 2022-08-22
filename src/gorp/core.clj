@@ -15,8 +15,7 @@
     [java.io LineNumberReader InputStreamReader PushbackReader]
     [clojure.lang RT]))
 
-(defn parse-json [s]
-  (ch/parse-string s true))
+(defn parse-json [s] (ch/parse-string s true))
 (def parse-edn edn/read-string)
 
 (defn read-edn-file [fp]
@@ -26,8 +25,7 @@
   (parse-json (slurp fp)))
 
 (defn read-files [ext fp]
-  (let [grammar-matcher (.getPathMatcher
-                         (java.nio.file.FileSystems/getDefault)
+  (let [grammar-matcher (.getPathMatcher (java.nio.file.FileSystems/getDefault)
                          (format "glob:*.{%s}" ext))
         read-file-fn (case ext
                        "edn" read-edn-file
@@ -41,37 +39,32 @@
 (def read-edn-files (partial read-files "edn"))
 (def read-json-files (partial read-files "json"))
 
-(defn write-edn-file [fp m]
+(defn write-txt-file
+  "Dump unformatted value into a file"
+  [fp s]
   (println "..... Writing new: " fp)
   (when-not (.exists (io/file fp))
     (io/make-parents fp))
+  (spit fp s))
+
+(defn write-edn-file [fp m]
   (let [out (walk/postwalk (fn [x]
                              (if (map? x)
                                (into (sorted-map) x)
                                x))
                            m)]
     (binding [pprint/*print-right-margin* 150]
-      (spit fp (with-out-str (pprint/pprint out))))))
-
-(defn write-txt-file
-  "Dump unformatted value into a file"
-  [fp s]
-  (println "..... Writing new: " fp)
-  (spit fp s))
+      (write-txt-file fp (with-out-str (pprint/pprint out))))))
 
 (defn write-xml-file
   "Writes enlive formatted xml map as xml file"
   [fp m]
-  (println "..... Writing new: " fp)
-  (when-not (.exists (io/file fp))
-    (io/make-parents fp))
-  (spit fp (xml/indent-str m)))
+  (write-txt-file fp (xml/indent-str m)))
 
 (defn write-json-file
   "Write some json object as json file"
   [fp x]
-  (println "..... Writing new: " fp)
-  (spit fp (ch/generate-string x {:pretty true})))
+  (write-txt-file (ch/generate-string x {:pretty true})))
 
 (defn init-fn []
   (require '[gorp.core])
