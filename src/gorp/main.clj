@@ -1,5 +1,6 @@
 (ns gorp.main
   (:require
+    [clj-async-profiler.core :as prof]
     [reply.main :as reply.main]))
 
 (defn init-fn []

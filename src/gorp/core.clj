@@ -1,6 +1,7 @@
 (ns gorp.core
   (:require
     [cheshire.core :as ch]
+    [clj-async-profiler.core :as prof]
     [clojure.data.xml :as xml]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
