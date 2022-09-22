@@ -4,6 +4,7 @@
     [clojure.data.xml :as xml]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
+    [clojure.set :as set]
     [clojure.pprint :as pprint]
     [clojure.repl :as repl]
     [clojure.string :as string]
@@ -14,14 +15,43 @@
   (:import
     [clojure.lang RT]))
 
-(defn parse-json [s] (ch/parse-string s true))
-(def parse-edn edn/read-string)
+(defmulti read-str
+  (fn ([s opts] (:fmt opts))
+      ([s] nil)))
+(defmethod read-str :edn [s _]
+  (let [x (edn/read-string s)]
+    (when-not (instance? clojure.lang.Symbol x)
+      x)))
+(defmethod read-str :json [s _] (ch/parse-string s true))
+(defmethod read-str nil [s]
+  (some #(try (read-str s {:fmt %}) (catch Throwable _ nil))
+        ;; FIXME: figure out better way of getting this list
+        [:edn :json]))
+
+(defmulti write-str (fn [_x opts] (:fmt opts)))
+(defmethod write-str :json [x opts]
+  (ch/generate-string x (set/rename-keys opts
+                                         {:pretty? :pretty})))
+(defmethod write-str :xml [x _]
+  (xml/indent-str x))
+(defmethod write-str :edn
+  [x {:keys [pretty?]}]
+  (if pretty?
+    (binding [pprint/*print-right-margin* 120]
+      (with-out-str
+        (->> (walk/postwalk (fn [y]
+                              (if (map? y)
+                                (into (sorted-map) y)
+                                y))
+                            x)
+             (pprint/pprint))))
+    x))
 
 (defn read-edn-file [fp]
-  (parse-edn (slurp fp)))
+  (read-str :edn (slurp fp)))
 
 (defn read-json-file [fp]
-  (parse-json (slurp fp)))
+  (write-str :json (slurp fp)))
 
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher (java.nio.file.FileSystems/getDefault)
@@ -46,21 +76,15 @@
     (io/make-parents fp))
   (spit fp s))
 
-(defn write-edn-file [fp m]
-  (let [out (walk/postwalk (fn [x]
-                             (if (map? x)
-                               (into (sorted-map) x)
-                               x))
-                           m)]
-    (binding [pprint/*print-right-margin* 150]
-      (write-txt-file fp (with-out-str (pprint/pprint out))))))
+(defn write-edn-file [fp x]
+  (write-txt-file fp (write-str x {:fmt :edn :pretty? true})))
 
 (defn write-xml-file
   "Writes enlive formatted xml map as xml file"
-  [fp m]
-  (write-txt-file fp (xml/indent-str m)))
+  [fp x]
+  (write-txt-file fp (write-str x {:fmt :xml})))
 
 (defn write-json-file
   "Write some json object as json file"
   [fp x]
-  (write-txt-file (ch/generate-string x {:pretty true})))
+  (write-txt-file (write-str x {:fmt :json :pretty? true})))
