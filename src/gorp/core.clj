@@ -52,7 +52,7 @@
   (read-str :edn (slurp fp)))
 
 (defn read-json-file [fp]
-  (write-str :json (slurp fp)))
+  (read-str :json (slurp fp)))
 
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher (java.nio.file.FileSystems/getDefault)
