@@ -1,12 +1,24 @@
 (ns gorp.main
   (:require
     [clj-async-profiler.core :as prof]
+    [clojure.java.io :as io]
+    [clojure.main :as main]
     [reply.main :as reply.main]))
+
+(def init-file "gorp_init.clj")
 
 (defn init-fn []
   (println "Loading gorp.core...")
   (require '[gorp.core])
-  (in-ns 'gorp.core))
+  (in-ns 'gorp.core)
+  ;; Load a custom script if exists.
+  ;; NOTE: it takes the first found, doesn't run everything available.
+  ;; easier to choose to run more scripts if needed
+  (when-let [fp (some #(when (.exists (io/file %)) %)
+                      [init-file
+                       (str (System/getenv "XDG_CONFIG_HOME") "/" init-file)
+                       (str (System/getenv "HOME") "/" init-file)])]
+    (main/load-script fp)))
 
 (defn -main
   "Mostly a copy of reply.main/-main except with a hardcoded

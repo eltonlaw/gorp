@@ -2,7 +2,7 @@
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.eltonlaw/gorp.svg?include_prereleases)](https://clojars.org/com.github.eltonlaw/gorp)
 
-## setup
+## Setup
 
 Have this in your deps.edn
 ```
@@ -17,7 +17,13 @@ and invoke the regular way to start the repl
 clj -M:gorp
 ```
 
-## dev
+## Usage
+
+For custom code, a `gorp_init.clj` will be loaded if it exists in any of current working dir, `$HOME` or `$XDF_CONFIG_HOME`.
+
+## Development
+
+### Clojars deploy
 
 ```
 clj -T:build clean
