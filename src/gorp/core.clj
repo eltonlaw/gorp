@@ -49,10 +49,10 @@
     x))
 
 (defn read-edn-file [fp]
-  (read-str :edn (slurp fp)))
+  (read-str (slurp fp) {:fmt :edn}))
 
 (defn read-json-file [fp]
-  (read-str :json (slurp fp)))
+  (read-str (slurp fp) {:fmt :json}))
 
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher (java.nio.file.FileSystems/getDefault)
