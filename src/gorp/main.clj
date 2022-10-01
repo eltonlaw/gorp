@@ -7,7 +7,9 @@
 
 (def init-file "gorp_init.clj")
 
-(defn init-fn []
+(defn init-fn [{:keys [init-filename init-ns]
+                :or {init-filename "gorp_init.clj"}
+                     init-ns 'gorp.core}]
   (println "Loading gorp.core...")
   (require '[gorp.core])
   (in-ns 'gorp.core)
@@ -32,7 +34,7 @@
             (reply.main/parse-args ["--help"])))
         options (assoc options
                        :custom-eval '(do (require '[gorp.main])
-                                         (gorp.main/init-fn)))]
+                                         (gorp.main/init-fn {})))]
     (if (:help options)
       (println banner)
       (reply.main/launch options))

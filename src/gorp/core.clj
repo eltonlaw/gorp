@@ -55,19 +55,14 @@
   (read-str (slurp fp) {:fmt :json}))
 
 (defn read-files [ext fp]
-  (let [grammar-matcher (.getPathMatcher (java.nio.file.FileSystems/getDefault)
-                         (format "glob:*.{%s}" ext))
-        read-file-fn (case ext
-                       "edn" read-edn-file
-                       "json" read-json-file)]
+  (let [grammar-matcher (.getPathMatcher
+                          (java.nio.file.FileSystems/getDefault)
+                          (format "glob:*.{%s}" ext))]
     (->> (io/file fp)
          file-seq
          (filter #(.isFile %))
          (filter #(.matches grammar-matcher (.getFileName (.toPath %))))
-         (mapv read-file-fn))))
-
-(def read-edn-files (partial read-files "edn"))
-(def read-json-files (partial read-files "json"))
+         (mapv #(read-files ext %)))))
 
 (defn write-txt-file
   "Dump unformatted value into a file"
