@@ -46,7 +46,7 @@
                                 y))
                             x)
              (pprint/pprint))))
-    x))
+    (pr-str x)))
 
 (defn read-edn-file [fp]
   (read-str (slurp fp) {:fmt :edn}))
