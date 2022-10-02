@@ -24,4 +24,12 @@
          {:fmt :edn}
 
          "{:a 1, :b \"foo\", :date #inst \"2022-11-01T04:00:00.000-00:00\"}\n"
-         {:fmt :edn :pretty? true})))
+         {:fmt :edn :pretty? true}))
+  (let [xml-data {:tag :SomeElement
+                  :attrs {"xmlns" "somens"}
+                  :content [{:tag :Bar :attrs {} :content ["1"]}
+                            {:tag :Baz :attrs {} :content ["2"]}]}]
+    (is (= "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SomeElement xmlns:a=\"somens\"><Bar>1</Bar><Baz>2</Baz></SomeElement>"
+           (gorp/write-str xml-data {:fmt :xml})))
+    (is (= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SomeElement xmlns:a=\"somens\">\n  <Bar>1</Bar>\n  <Baz>2</Baz>\n</SomeElement>\n"
+           (gorp/write-str xml-data {:fmt :xml :pretty? true})))))

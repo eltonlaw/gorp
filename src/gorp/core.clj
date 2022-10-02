@@ -3,6 +3,10 @@
     [cheshire.core :as ch]
     [clj-async-profiler.core :as prof]
     [clojure.data.xml :as xml]
+    [clojure.data.xml.node :as xml.node]
+    [clojure.data.xml.name :as xml.name]
+    [clojure.data.xml.event :as xml.event]
+    [clojure.data.xml.pu-map :as xml.pu-map]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
     [clojure.set :as set]
@@ -29,12 +33,25 @@
         ;; FIXME: figure out better way of getting this list
         [:edn :json]))
 
-(defmulti write-str (fn [_x opts] (:fmt opts)))
+(defmulti write-str
+  "Generate str from clj data"
+  {:arglists '([x opts])}
+  (fn [_x opts] (:fmt opts)))
 (defmethod write-str :json [x opts]
-  (ch/generate-string x (set/rename-keys opts
-                                         {:pretty? :pretty})))
-(defmethod write-str :xml [x _]
-  (xml/indent-str x))
+  (ch/generate-string
+    x
+    (set/rename-keys opts
+                     {:pretty? :pretty})))
+(defmethod write-str
+  :xml [x {:keys [pretty?]}]
+  (let [element (cond
+                  (= "clojure.data.xml.Element" (type x)) x
+                  (map? x) (xml.node/map->Element x)
+                  :else (throw (ex-info "Couldn't coerce element into XML"
+                                        {:xml-data x})))]
+    (if pretty?
+      (xml/indent-str element)
+      (xml/emit-str element))))
 (defmethod write-str :edn
   [x {:keys [pretty?]}]
   (if pretty?
@@ -78,9 +95,25 @@
 (defn write-xml-file
   "Writes enlive formatted xml map as xml file"
   [fp x]
-  (write-txt-file fp (write-str x {:fmt :xml})))
+  (write-txt-file fp (write-str x {:fmt :xml :pretty? true})))
 
 (defn write-json-file
   "Write some json object as json file"
   [fp x]
   (write-txt-file (write-str x {:fmt :json :pretty? true})))
+
+(extend
+  clojure.lang.PersistentArrayMap
+  {:gen-event (fn elem-gen-event [{:keys [tag attrs content] :as element}]
+                (xml.name/separate-xmlns
+                 attrs #((if (seq content)
+                           xml.event/->StartElementEvent
+                           xml.event/->EmptyElementEvent)
+                         tag %1
+                         (xml.pu-map/merge-prefix-map
+                           (xml.event/element-nss* element) %2)
+                         nil)))
+   :next-events (fn elem-next-events [{:keys [tag content]} next-items]
+                  (if (seq content)
+                    (list* content xml.event/end-element-event next-items)
+                    next-items))})
