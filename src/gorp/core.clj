@@ -9,9 +9,9 @@
     [clojure.data.xml.pu-map :as xml.pu-map]
     [clojure.edn :as edn]
     [clojure.java.io :as io]
-    [clojure.set :as set]
     [clojure.pprint :as pprint]
     [clojure.repl :as repl]
+    [clojure.set :as set]
     [clojure.string :as string]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
@@ -28,10 +28,11 @@
     (when-not (instance? clojure.lang.Symbol x)
       x)))
 (defmethod read-str :json [s _] (ch/parse-string s true))
+(defmethod read-str :xml [s _] (xml/parse-str s))
 (defmethod read-str nil [s]
   (some #(try (read-str s {:fmt %}) (catch Throwable _ nil))
         ;; FIXME: figure out better way of getting this list
-        [:edn :json]))
+        [:edn :json :xml]))
 
 (defmulti write-str
   "Generate str from clj data"
@@ -71,6 +72,11 @@
 (defn read-json-file [fp]
   (read-str (slurp fp) {:fmt :json}))
 
+(defn file-ext [fp] (keyword (last (string/split fp #"\."))))
+
+(defn read-file [fp]
+  (read-str (slurp fp) {:fmt (file-ext fp)}))
+
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher
                           (java.nio.file.FileSystems/getDefault)
@@ -88,6 +94,14 @@
   (when-not (.exists (io/file fp))
     (io/make-parents fp))
   (spit fp s))
+
+(defn write-file
+  ([fp x]
+   (write-file fp x {}))
+  ([fp x {:keys [pretty?]
+          :or {pretty? true}}]
+   (write-txt-file fp (write-str x {:fmt (file-ext fp)
+                                    :pretty? pretty?}))))
 
 (defn write-edn-file [fp x]
   (write-txt-file fp (write-str x {:fmt :edn :pretty? true})))

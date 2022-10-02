@@ -1,6 +1,7 @@
 (ns gorp.core-test
   (:require [clojure.test :refer [are deftest testing is]]
-            [gorp.core :as gorp]))
+            [gorp.core :as gorp])
+  (:import [java.io File]))
 
 (deftest read-str-test
   (testing "dont pass in ext, coerce by trying"
@@ -33,3 +34,20 @@
            (gorp/write-str xml-data {:fmt :xml})))
     (is (= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SomeElement xmlns:a=\"somens\">\n  <Bar>1</Bar>\n  <Baz>2</Baz>\n</SomeElement>\n"
            (gorp/write-str xml-data {:fmt :xml :pretty? true})))))
+
+(deftest read-write-file-roundtrip
+  (let [f (File/createTempFile "gorp_tests_roundtrip" ".edn")
+        fp (.getPath f)
+        data {:a 1 :foo "bar"}]
+    (gorp/write-file fp data)
+    (is (= (gorp/read-file fp) data)))
+  (let [f (File/createTempFile "gorp_tests_roundtrip" ".json")
+        fp (.getPath f)
+        data {:a 1 :foo "bar"}]
+    (gorp/write-file fp data)
+    (is (= (gorp/read-file fp) data)))
+  (let [f (File/createTempFile "gorp_tests_roundtrip" ".xml")
+        fp (.getPath f)
+        data #xml/element{:tag :A :content ["BC"]}]
+    (gorp/write-file fp data)
+    (is (= (gorp/read-file fp) data))))
