@@ -77,6 +77,9 @@
 (defn read-file [fp]
   (read-str (slurp fp) {:fmt (file-ext fp)}))
 
+(defn try-read-file [fp]
+  (try (read-file fp) (catch Exception _ nil)))
+
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher
                           (java.nio.file.FileSystems/getDefault)
