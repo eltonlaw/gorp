@@ -78,11 +78,15 @@
     (string? x) (keyword (last (string/split x #"\.")))
     (instance? File x) (file-ext (.getPath ^File x))))
 
-(defn read-file [fp]
-  (read-str (slurp fp) {:fmt (file-ext fp)}))
+(defn read-file
+  ([fp] (read-file fp {}))
+  ([fp opts]
+   (read-str (slurp fp) (conj {:fmt (file-ext fp)} opts))))
 
-(defn try-read-file [fp]
-  (try (read-file fp) (catch Exception _ nil)))
+(defn try-read-file
+  ([fp] (try-read-file fp {}))
+  ([fp read-file-opts]
+   (try (read-file fp read-file-opts) (catch Exception _ nil))))
 
 (defn read-files [ext fp]
   (let [grammar-matcher (.getPathMatcher
