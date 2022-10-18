@@ -18,7 +18,8 @@
     [criterium.core :as criterium]
     [reply.main :as reply.main])
   (:import
-    [clojure.lang RT]))
+    [clojure.lang RT]
+    [java.io File]))
 
 (defmulti read-str
   (fn ([s opts] (:fmt opts))
@@ -72,7 +73,10 @@
 (defn read-json-file [fp]
   (read-str (slurp fp) {:fmt :json}))
 
-(defn file-ext [fp] (keyword (last (string/split fp #"\."))))
+(defn file-ext [x]
+  (cond
+    (string? x) (keyword (last (string/split x #"\.")))
+    (instance? File x) (file-ext (.getPath ^File x))))
 
 (defn read-file [fp]
   (read-str (slurp fp) {:fmt (file-ext fp)}))
