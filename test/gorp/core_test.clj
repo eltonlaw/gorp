@@ -1,5 +1,6 @@
 (ns gorp.core-test
-  (:require [clojure.test :refer [are deftest testing is]]
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer [are deftest testing is]]
             [gorp.core :as gorp])
   (:import [java.io File]))
 
@@ -51,3 +52,7 @@
         data #xml/element{:tag :A :content ["BC"]}]
     (gorp/write-file fp data)
     (is (= (gorp/read-file fp) data))))
+
+(deftest read-file-fmt-sql-test
+  (is (= "SELECT col1, col2, col3 FROM tableA WHERE col1 = 'b';"
+         (gorp/read-file (io/resource "some_query.sql")))))

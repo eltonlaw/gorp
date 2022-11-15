@@ -19,7 +19,8 @@
     [reply.main :as reply.main])
   (:import
     [clojure.lang RT]
-    [java.io File]))
+    [java.io File]
+    [java.net URL]))
 
 (defmulti read-str
   (fn ([s opts] (:fmt opts))
@@ -31,6 +32,14 @@
       x)))
 (defmethod read-str :json [s _] (ch/parse-string s true))
 (defmethod read-str :xml [s _] (xml/parse-str s))
+(defmethod read-str :txt [s _] s)
+(defmethod read-str :sql [s _]
+  (string/replace
+    (->> (string/split s #"\n")
+         (remove #(string/starts-with? % "--"))
+         (string/join " "))
+    #"\s+"
+    " "))
 (defmethod read-str nil [s]
   (some #(try (read-str s {:fmt %}) (catch Throwable _ nil))
         ;; FIXME: figure out better way of getting this list
@@ -78,7 +87,10 @@
 (defn file-ext [x]
   (cond
     (string? x) (keyword (last (string/split x #"\.")))
-    (instance? File x) (file-ext (.getPath ^File x))))
+    (instance? File x) (file-ext (.getPath ^File x))
+    (instance? URL x) (file-ext (.getPath ^URL x))
+    :else (throw (ex-info (str "Unexpected input passed into file-ext:" (class x))
+                          {:class (class x) :x x}))))
 
 (defn read-file
   ([fp] (read-file fp {}))

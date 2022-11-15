@@ -7,7 +7,7 @@
         nrepl/nrepl {:mvn/version "0.9.0"}
         reply/reply {:mvn/version "0.5.0"}}
  :aliases
- {:test {:extra-paths ["test"]}
+ {:test {:extra-paths ["test" "test_resources"]}
   :build {:extra-paths ["build.clj"]
           :deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
                  slipset/deps-deploy {:mvn/version "RELEASE"}}
