@@ -24,6 +24,7 @@
 (defmulti read-str
   (fn ([s opts] (:fmt opts))
       ([s] nil)))
+(defmethod read-str :txt [s _] s)
 (defmethod read-str :edn [s _]
   (let [x (edn/read-string s)]
     (when-not (instance? clojure.lang.Symbol x)
@@ -39,6 +40,7 @@
   "Generate str from clj data"
   {:arglists '([x opts])}
   (fn [_x opts] (:fmt opts)))
+(defmethod write-str :txt [x _] x)
 (defmethod write-str :json [x opts]
   (ch/generate-string
     x
