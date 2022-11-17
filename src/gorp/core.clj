@@ -143,9 +143,14 @@
 
 (defn run-or-cached
   "Either return data read from a file or run f, save to file and return f's ret"
-  [{:keys [cache-fp read-file-opts write-file-opts]} f]
+  [{:keys [cache-fp
+           force-run?
+           read-file-opts
+           write-file-opts]}
+   f]
   (assert cache-fp "Need to pass in cache-fp")
-  (if-let [ret (try-read-file cache-fp read-file-opts)]
+  (if-let [ret (and (not force-run?)
+                    (try-read-file cache-fp read-file-opts))]
     ret
     (let [ret (f)]
       (write-file cache-fp ret)
