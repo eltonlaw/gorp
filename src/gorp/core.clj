@@ -159,17 +159,28 @@
       (write-file cache-fp ret)
       ret)))
 
-(defn get-shape [x]
-  (if-not (coll? x)
-    (type x)
-    (cond
-      (map? x) (reduce-kv (fn [m k v] (assoc m k (get-shape v))) {} x)
-      (set? x) (into #{} (map get-shape x))
-      (vector? x) (mapv get-shape x)
-      (list? x) (map get-shape x))))
+(defn get-shape
+  "For some nested coll, print out data types, keeping keys
+  as is.
 
-(defn pprint-shape [input]
-  (pprint/pprint (get-shape input)))
+  Pass in :dedupe? to vectors and lists are deduped by shape"
+  ([x] (get-shape x nil))
+  ([x {:keys [dedupe?] :as opts}]
+   (if-not (coll? x)
+     (type x)
+     (cond
+       (map? x) (reduce-kv (fn [m k v]
+                             (assoc m k (get-shape v opts))) {} x)
+       (set? x) (into #{} (map #(get-shape % opts) x))
+       (vector? x) (cond-> (mapv #(get-shape % opts) x)
+                     dedupe? (-> distinct vec))
+       (list? x) (cond-> (map #(get-shape % opts) x)
+                   dedupe? (distinct))))))
+
+(defn pprint-shape
+  ([input] (pprint-shape input nil))
+  ([input opts]
+   (pprint/pprint (get-shape input opts))))
 
 (extend
   clojure.lang.PersistentArrayMap

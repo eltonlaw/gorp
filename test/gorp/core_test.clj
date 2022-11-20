@@ -58,12 +58,25 @@
          (gorp/read-file (io/resource "some_query.sql")))))
 
 (deftest get-shape-test
-  (is (=  {:a java.lang.Long
-           :b [java.lang.String java.lang.String]
-           :c {:c1 java.lang.String
-               :c2 clojure.lang.Keyword}
-           :d [{:d1 [{:d1-1 nil :d1-2 java.lang.Exception}]}]}
+  (is (= {:a java.lang.Long
+          :b [java.lang.String java.lang.String]
+          :c {:c1 java.lang.String
+              :c2 clojure.lang.Keyword}
+          :d [{:d1 [{:d1-1 nil :d1-2 java.lang.Exception}]}]}
          (gorp/get-shape {:a 1
                           :b ["a" "b"]
                           :c {:c1 "c1-val" :c2 :c2-val}
-                          :d [{:d1 [{:d1-1 nil :d1-2 (Exception.)}]}]}))))
+                          :d [{:d1 [{:d1-1 nil :d1-2 (Exception.)}]}]})))
+  (testing "dedupe? flag"
+    (let [input {:a [{:b "0" :c "1"}
+                     {:b 2 :c "3"}
+                     {:b "4" :c "5"}
+                     {:b 6 :c "7"}]}]
+      (is (= {:a [{:b java.lang.String :c java.lang.String}
+                  {:b java.lang.Long :c java.lang.String}
+                  {:b java.lang.String :c java.lang.String}
+                  {:b java.lang.Long :c java.lang.String}]}
+             (gorp/get-shape input)))
+      (is (= {:a [{:b java.lang.String :c java.lang.String}
+                  {:b java.lang.Long :c java.lang.String}]}
+             (gorp/get-shape input {:dedupe? true}))))))
