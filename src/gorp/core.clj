@@ -102,15 +102,18 @@
   ([fp read-file-opts]
    (try (read-file fp read-file-opts) (catch Exception _ nil))))
 
-(defn read-files [ext fp]
+(defn read-files
+  "Attempts to read all files in some dir
+  Ex. (read-files \"my-dir\" \"*.edn\")"
+  [root-fp glob]
   (let [grammar-matcher (.getPathMatcher
                           (java.nio.file.FileSystems/getDefault)
-                          (format "glob:*.{%s}" ext))]
-    (->> (io/file fp)
+                          (format "glob:{%s}" glob))]
+    (->> (io/file root-fp)
          file-seq
          (filter #(.isFile %))
          (filter #(.matches grammar-matcher (.getFileName (.toPath %))))
-         (mapv #(read-files ext %)))))
+         (mapv #(read-file %)))))
 
 (defn write-txt-file
   "Dump unformatted value into a file"
