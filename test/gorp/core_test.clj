@@ -56,3 +56,14 @@
 (deftest read-file-fmt-sql-test
   (is (= "SELECT col1, col2, col3 FROM tableA WHERE col1 = 'b';"
          (gorp/read-file (io/resource "some_query.sql")))))
+
+(deftest get-shape-test
+  (is (=  {:a java.lang.Long
+           :b [java.lang.String java.lang.String]
+           :c {:c1 java.lang.String
+               :c2 clojure.lang.Keyword}
+           :d [{:d1 [{:d1-1 nil :d1-2 java.lang.Exception}]}]}
+         (gorp/get-shape {:a 1
+                          :b ["a" "b"]
+                          :c {:c1 "c1-val" :c2 :c2-val}
+                          :d [{:d1 [{:d1-1 nil :d1-2 (Exception.)}]}]}))))

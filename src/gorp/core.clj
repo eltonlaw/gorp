@@ -159,6 +159,18 @@
       (write-file cache-fp ret)
       ret)))
 
+(defn get-shape [x]
+  (if-not (coll? x)
+    (type x)
+    (cond
+      (map? x) (reduce-kv (fn [m k v] (assoc m k (get-shape v))) {} x)
+      (set? x) (into #{} (map get-shape x))
+      (vector? x) (mapv get-shape x)
+      (list? x) (map get-shape x))))
+
+(defn pprint-shape [input]
+  (pprint/pprint (get-shape input)))
+
 (extend
   clojure.lang.PersistentArrayMap
   {:gen-event (fn elem-gen-event [{:keys [tag attrs content] :as element}]
