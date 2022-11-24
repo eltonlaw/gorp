@@ -2,6 +2,7 @@
   (:require
     [cheshire.core :as ch]
     [clj-async-profiler.core :as prof]
+    [clojure.data.csv :as csv]
     [clojure.data.xml :as xml]
     [clojure.data.xml.node :as xml.node]
     [clojure.data.xml.name :as xml.name]
@@ -40,6 +41,10 @@
          (string/join " "))
     #"\s+"
     " "))
+(defmethod read-str :csv [s _]
+  (let [rows-strs (csv/read-csv s)
+        headers (map keyword (first rows-strs))]
+    (mapv zipmap (repeat headers) (rest rows-strs))))
 (defmethod read-str nil [s]
   (some #(try (read-str s {:fmt %}) (catch Throwable _ nil))
         ;; FIXME: figure out better way of getting this list
@@ -77,6 +82,18 @@
                             x)
              (pprint/pprint))))
     (pr-str x)))
+(defmethod write-str :csv
+  [x {:keys [headers]}]
+  (assert (and (not-empty headers)
+               (every? #(or (string? %)
+                            (keyword? %)) headers))
+          "Passed in :headers should be a list of keywords/strings")
+  (let [make-row (apply juxt headers)]
+    (with-open [s (java.io.StringWriter.)]
+      (csv/write-csv s
+                     (cons (map name headers)
+                           (map make-row x)))
+      (str s))))
 
 (defn read-edn-file [fp]
   (read-str (slurp fp) {:fmt :edn}))
@@ -126,10 +143,10 @@
 (defn write-file
   ([fp x]
    (write-file fp x {}))
-  ([fp x {:keys [pretty?]
-          :or {pretty? true}}]
-   (write-txt-file fp (write-str x {:fmt (file-ext fp)
-                                    :pretty? pretty?}))))
+  ([fp x opts]
+   (write-txt-file fp (write-str x (conj {:fmt (file-ext fp)
+                                          :pretty? true}
+                                         opts)))))
 
 (defn write-edn-file [fp x]
   (write-txt-file fp (write-str x {:fmt :edn :pretty? true})))
