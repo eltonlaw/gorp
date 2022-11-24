@@ -214,3 +214,6 @@
                   (if (seq content)
                     (list* content xml.event/end-element-event next-items)
                     next-items))})
+
+(defn count-by [f coll]
+  (frequencies (map f coll)))
