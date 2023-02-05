@@ -164,16 +164,20 @@
 (defn run-or-cached
   "Either return data read from a file or run f, save to file and return f's ret"
   [{:keys [cache-fp
+           cache-on-nil?
            force-run?
            read-file-opts
-           write-file-opts]}
+           write-file-opts]
+    :or {cache-on-nil? true}}
    f]
   (assert cache-fp "Need to pass in cache-fp")
   (if-let [ret (and (not force-run?)
                     (try-read-file cache-fp read-file-opts))]
     ret
     (let [ret (f)]
-      (write-file cache-fp ret)
+      (if (and (false? cache-on-nil?) (nil? ret))
+        (println "..... nil ret for cache-fp: " cache-fp))
+        (do (write-file cache-fp ret) ret)
       ret)))
 
 (defn get-shape
