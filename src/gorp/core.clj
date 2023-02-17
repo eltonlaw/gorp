@@ -119,18 +119,22 @@
   ([fp read-file-opts]
    (try (read-file fp read-file-opts) (catch Exception _ nil))))
 
+(defn list-files
+  ([root-fp] (list-files root-fp ".*"))
+  ([root-fp glob]
+   (let [grammar-matcher (.getPathMatcher
+                           (java.nio.file.FileSystems/getDefault)
+                           (format "regex:%s" glob))]
+     (->> (io/file root-fp)
+          file-seq
+          (filter #(.isFile %))
+          (filter #(.matches grammar-matcher (.getFileName (.toPath %))))))))
+
 (defn read-files
   "Attempts to read all files in some dir
-  Ex. (read-files \"my-dir\" \"*.edn\")"
-  [root-fp glob]
-  (let [grammar-matcher (.getPathMatcher
-                          (java.nio.file.FileSystems/getDefault)
-                          (format "glob:{%s}" glob))]
-    (->> (io/file root-fp)
-         file-seq
-         (filter #(.isFile %))
-         (filter #(.matches grammar-matcher (.getFileName (.toPath %))))
-         (mapv #(read-file %)))))
+  Ex. (read-files \"my-dir\" \".*.clj\")"
+  [root-fp regex-str]
+  (mapv #(read-file %) (list-files root-fp regex-str)))
 
 (defn write-txt-file
   "Dump unformatted value into a file"
@@ -176,8 +180,8 @@
     ret
     (let [ret (f)]
       (if (and (false? cache-on-nil?) (nil? ret))
-        (println "..... nil ret for cache-fp: " cache-fp))
-        (do (write-file cache-fp ret) ret)
+        (println "..... nil ret for cache-fp: " cache-fp)
+        (do (write-file cache-fp ret) ret))
       ret)))
 
 (defn get-shape
